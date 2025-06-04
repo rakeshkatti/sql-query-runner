@@ -166,7 +166,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                     </div>
                 ) : (
                     <>
-                        <div className="overflow-auto max-h-[500px] border rounded dark:border-slate-600">
+                        <div className="overflow-auto custom-scrollbar max-h-[500px] border rounded dark:border-slate-600">
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-gray-50 dark:bg-slate-700">

@@ -166,3 +166,14 @@
 .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: rgb(107 114 128); /* gray-500 */
 }
+
+/* Toast styling for better description visibility */
+[data-sonner-toast] [data-description] {
+    color: rgb(107 114 128) !important; /* gray-500 for light mode */
+    opacity: 1 !important;
+}
+
+.dark [data-sonner-toast] [data-description] {
+    color: rgb(156 163 175) !important; /* gray-400 for dark mode */
+    opacity: 1 !important;
+}
