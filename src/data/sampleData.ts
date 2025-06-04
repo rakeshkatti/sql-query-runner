@@ -2,7 +2,7 @@ export interface Dataset {
     name: string
     description: string
     columns: string[]
-    data: any[]
+    data: any[] // eslint-disable-line @typescript-eslint/no-explicit-any
     sampleQueries: string[]
 }
 
@@ -81,6 +81,14 @@ export const datasets: Dataset[] = [
             "SELECT * FROM employees WHERE department = 'Engineering'",
             'SELECT name, salary FROM employees WHERE salary > 80000 ORDER BY salary DESC',
             'SELECT department, AVG(salary) as avg_salary FROM employees GROUP BY department',
+            'SELECT COUNT(*) as total_employees FROM employees',
+            "SELECT * FROM employees WHERE hire_date >= '2022-01-01'",
+            'SELECT department, COUNT(*) as employee_count FROM employees GROUP BY department ORDER BY employee_count DESC',
+            'CREATE TABLE new_employees (id INT, name VARCHAR(100), department VARCHAR(50), salary DECIMAL(10,2))',
+            "INSERT INTO employees (name, department, salary, hire_date, email) VALUES ('Alex Turner', 'Engineering', 95000, '2024-01-15', 'alex.turner@company.com')",
+            "UPDATE employees SET salary = salary * 1.1 WHERE department = 'Engineering'",
+            'DELETE FROM employees WHERE salary < 50000',
+            'DROP TABLE temp_employees',
         ],
     },
     {
@@ -164,6 +172,15 @@ export const datasets: Dataset[] = [
             'SELECT * FROM sales WHERE amount > 500 ORDER BY amount DESC',
             'SELECT region, SUM(amount) as total_sales FROM sales GROUP BY region',
             'SELECT product, COUNT(*) as sales_count FROM sales GROUP BY product ORDER BY sales_count DESC',
+            'SELECT AVG(amount) as average_sale FROM sales',
+            "SELECT * FROM sales WHERE date BETWEEN '2024-01-15' AND '2024-01-20'",
+            'SELECT customer_name, SUM(amount) as total_spent FROM sales GROUP BY customer_name ORDER BY total_spent DESC',
+            'SELECT region, product, SUM(amount) as revenue FROM sales GROUP BY region, product',
+            "CREATE TABLE sales_archive AS SELECT * FROM sales WHERE date < '2024-01-01'",
+            "INSERT INTO sales (transaction_id, customer_name, product, amount, date, region) VALUES ('TXN999', 'New Customer', 'New Product', 299.99, '2024-06-01', 'Central')",
+            "UPDATE sales SET region = 'Central' WHERE region = 'Unknown'",
+            'DELETE FROM sales WHERE amount < 20',
+            'DROP TABLE temp_sales',
         ],
     },
     {
@@ -247,6 +264,15 @@ export const datasets: Dataset[] = [
             'SELECT * FROM products WHERE stock_quantity < 50',
             'SELECT category, AVG(price) as avg_price FROM products GROUP BY category',
             'SELECT supplier, COUNT(*) as product_count FROM products GROUP BY supplier ORDER BY product_count DESC',
+            'SELECT * FROM products WHERE price BETWEEN 100 AND 500',
+            'SELECT product_name, price * stock_quantity as inventory_value FROM products ORDER BY inventory_value DESC',
+            'SELECT category, SUM(stock_quantity) as total_stock FROM products GROUP BY category',
+            "SELECT * FROM products WHERE supplier = 'TechCorp' ORDER BY price DESC",
+            'CREATE TABLE product_categories (id INT, category_name VARCHAR(50), description TEXT)',
+            "INSERT INTO products (product_id, product_name, category, price, stock_quantity, supplier) VALUES ('P999', 'New Product', 'Electronics', 199.99, 50, 'NewSupplier')",
+            'UPDATE products SET price = price * 0.9 WHERE stock_quantity > 100',
+            'DELETE FROM products WHERE stock_quantity = 0',
+            'DROP TABLE discontinued_products',
         ],
     },
 ]
