@@ -39,60 +39,7 @@ export const DataTable: React.FC<DataTableProps> = ({
     message,
     onExport,
 }) => {
-    // For non-SELECT operations, show a simple success message
-    if (operationType && operationType !== 'SELECT') {
-        return (
-            <Card className="dark:bg-slate-800 dark:border-slate-700">
-                <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle className="text-xl font-bold text-gray-800 dark:text-white">
-                                {operationType} Operation Result
-                            </CardTitle>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                                Executed in {queryExecutionTime}ms
-                            </p>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-center py-12">
-                        <div className="text-center">
-                            <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                                <svg
-                                    className="w-8 h-8 text-green-600 dark:text-green-400"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M5 13l4 4L19 7"
-                                    />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                                Operation Successful
-                            </h3>
-                            <div className="text-gray-600 dark:text-gray-300 mb-4">
-                                {message ||
-                                    `${operationType} operation completed successfully`}
-                            </div>
-                            {data.length > 0 && (
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    Rows affected: {data.length}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        )
-    }
-
-    // All hooks must be declared after the early return
+    // All hooks must be called unconditionally at the top
     const [sorting, setSorting] = useState<SortingState>([])
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
     const [globalFilter, setGlobalFilter] = useState('')
@@ -190,78 +137,124 @@ export const DataTable: React.FC<DataTableProps> = ({
             .getHeaderGroups()[0]
             ?.headers.reduce((sum, header) => sum + header.getSize(), 0) || 0
 
+    // Conditional rendering in JSX instead of early returns
+    const isNonSelectOperation = operationType && operationType !== 'SELECT'
+
     return (
         <Card className="dark:bg-slate-800 dark:border-slate-700">
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="text-xl font-bold text-gray-800 dark:text-white">
-                            Query Results
+                            {isNonSelectOperation
+                                ? `${operationType} Operation Result`
+                                : 'Query Results'}
                         </CardTitle>
                         <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                            {displayRows.length} of {rows.length} rows •
-                            Executed in {queryExecutionTime}ms
+                            {isNonSelectOperation
+                                ? `Executed in ${queryExecutionTime}ms`
+                                : `${displayRows.length} of ${rows.length} rows • Executed in ${queryExecutionTime}ms`}
                         </p>
                     </div>
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={() => onExport('csv')}
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center gap-2"
-                            disabled={data.length === 0}
-                        >
-                            <Download className="h-4 w-4" />
-                            CSV
-                        </Button>
-                        <Button
-                            onClick={() => onExport('json')}
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center gap-2"
-                            disabled={data.length === 0}
-                        >
-                            <Download className="h-4 w-4" />
-                            JSON
-                        </Button>
-                    </div>
+                    {!isNonSelectOperation && (
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={() => onExport('csv')}
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-2"
+                                disabled={data.length === 0}
+                            >
+                                <Download className="h-4 w-4" />
+                                CSV
+                            </Button>
+                            <Button
+                                onClick={() => onExport('json')}
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-2"
+                                disabled={data.length === 0}
+                            >
+                                <Download className="h-4 w-4" />
+                                JSON
+                            </Button>
+                        </div>
+                    )}
                 </div>
-                <div className="mt-4 flex gap-4 items-center flex-wrap">
-                    <div className="relative flex-1 min-w-[200px]">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                            placeholder="Search in results..."
-                            value={globalFilter ?? ''}
-                            onChange={e => setGlobalFilter(e.target.value)}
-                            className="pl-10"
-                        />
+                {!isNonSelectOperation && (
+                    <div className="mt-4 flex gap-4 items-center flex-wrap">
+                        <div className="relative flex-1 min-w-[200px]">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                                placeholder="Search in results..."
+                                value={globalFilter ?? ''}
+                                onChange={e => setGlobalFilter(e.target.value)}
+                                className="pl-10"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                                Show:
+                            </span>
+                            <select
+                                value={pageSize}
+                                onChange={e =>
+                                    setPageSize(Number(e.target.value))
+                                }
+                                className="px-2 py-1 border rounded text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                            >
+                                <option value={25}>25</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                                <option value={500}>500</option>
+                                <option value={1000}>1000</option>
+                                <option value={rows.length}>
+                                    All ({rows.length})
+                                </option>
+                            </select>
+                            <span className="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                                rows
+                            </span>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                            Show:
-                        </span>
-                        <select
-                            value={pageSize}
-                            onChange={e => setPageSize(Number(e.target.value))}
-                            className="px-2 py-1 border rounded text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                        >
-                            <option value={25}>25</option>
-                            <option value={50}>50</option>
-                            <option value={100}>100</option>
-                            <option value={500}>500</option>
-                            <option value={1000}>1000</option>
-                            <option value={rows.length}>
-                                All ({rows.length})
-                            </option>
-                        </select>
-                        <span className="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                            rows
-                        </span>
-                    </div>
-                </div>
+                )}
             </CardHeader>
             <CardContent>
-                {data.length === 0 ? (
+                {isNonSelectOperation ? (
+                    // Non-SELECT operation success message
+                    <div className="flex items-center justify-center py-12">
+                        <div className="text-center">
+                            <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                                <svg
+                                    className="w-8 h-8 text-green-600 dark:text-green-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                Operation Successful
+                            </h3>
+                            <div className="text-gray-600 dark:text-gray-300 mb-4">
+                                {message ||
+                                    `${operationType} operation completed successfully`}
+                            </div>
+                            {data.length > 0 && (
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    Rows affected: {data.length}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ) : data.length === 0 ? (
+                    // No data message
                     <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                         <div className="text-lg font-medium mb-2">
                             No data to display
@@ -271,6 +264,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                         </div>
                     </div>
                 ) : (
+                    // SELECT operation table
                     <div className="border rounded-md dark:border-slate-600 overflow-hidden">
                         {/* Synchronized Table Header */}
                         <div
