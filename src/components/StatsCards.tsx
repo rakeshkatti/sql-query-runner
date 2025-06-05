@@ -8,9 +8,6 @@ import {
     Clock,
     Zap,
     Settings,
-    Eye,
-    EyeOff,
-    GripVertical,
     BarChart3,
     Timer,
     Activity,
@@ -127,7 +124,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
 }) => {
     const { selectedDataset } = useDataset()
     const [cards, setCards] = useState<StatCard[]>(defaultCards)
-    const [isCustomizing, setIsCustomizing] = useState(false)
+    // const [isCustomizing, setIsCustomizing] = useState(false)
 
     const statsData: StatsData = {
         selectedDataset,
@@ -145,21 +142,21 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
         )
     }
 
-    const moveCard = (cardId: string, direction: 'up' | 'down') => {
-        setCards(prev => {
-            const currentIndex = prev.findIndex(card => card.id === cardId)
-            if (currentIndex === -1) return prev
+    // const moveCard = (cardId: string, direction: 'up' | 'down') => {
+    //     setCards(prev => {
+    //         const currentIndex = prev.findIndex(card => card.id === cardId)
+    //         if (currentIndex === -1) return prev
 
-            const newIndex =
-                direction === 'up' ? currentIndex - 1 : currentIndex + 1
-            if (newIndex < 0 || newIndex >= prev.length) return prev
+    //         const newIndex =
+    //             direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    //         if (newIndex < 0 || newIndex >= prev.length) return prev
 
-            const newCards = [...prev]
-            const [movedCard] = newCards.splice(currentIndex, 1)
-            newCards.splice(newIndex, 0, movedCard)
-            return newCards
-        })
-    }
+    //         const newCards = [...prev]
+    //         const [movedCard] = newCards.splice(currentIndex, 1)
+    //         newCards.splice(newIndex, 0, movedCard)
+    //         return newCards
+    //     })
+    // }
 
     const resetToDefault = () => {
         setCards(defaultCards)
