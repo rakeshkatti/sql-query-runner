@@ -26,8 +26,22 @@ export const SampleQueriesSidebar: React.FC<SampleQueriesSidebarProps> = ({
                 </div>
             </div>
 
-            <div className="flex-1 px-6 pb-6 min-h-0">
-                <Card className="dark:bg-slate-800 dark:border-slate-700 h-full flex flex-col">
+            <div className="flex-1 px-3 pb-3 min-h-0">
+                <div className="h-full overflow-y-auto custom-scrollbar">
+                    <div className="space-y-2 p-2 pt-0">
+                        {currentDataset.sampleQueries.map((query, index) => (
+                            <Button
+                                key={index}
+                                variant="ghost"
+                                className="cursor-pointer w-full justify-start text-left font-mono text-xs h-auto p-3 whitespace-pre-wrap bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600"
+                                onClick={() => onSelectQuery(query)}
+                            >
+                                {query}
+                            </Button>
+                        ))}
+                    </div>
+                </div>
+                {/* <Card className="dark:bg-slate-800 dark:border-slate-700 h-full flex flex-col">
                     <CardHeader className="pb-3 flex-shrink-0">
                         <CardTitle className="text-base font-medium text-gray-800 dark:text-white">
                             {currentDataset.name}
@@ -36,25 +50,8 @@ export const SampleQueriesSidebar: React.FC<SampleQueriesSidebarProps> = ({
                             {currentDataset.description}
                         </p>
                     </CardHeader>
-                    <CardContent className="flex-1 min-h-0 p-0">
-                        <div className="h-full overflow-y-auto custom-scrollbar max-h-80">
-                            <div className="space-y-2 p-6 pt-0">
-                                {currentDataset.sampleQueries.map(
-                                    (query, index) => (
-                                        <Button
-                                            key={index}
-                                            variant="ghost"
-                                            className="w-full justify-start text-left font-mono text-xs h-auto p-3 whitespace-pre-wrap bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600"
-                                            onClick={() => onSelectQuery(query)}
-                                        >
-                                            {query}
-                                        </Button>
-                                    )
-                                )}
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                    <CardContent className="flex-1 min-h-0 p-0"></CardContent>
+                </Card> */}
             </div>
         </div>
     )

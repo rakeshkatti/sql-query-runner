@@ -1,5 +1,10 @@
 import { Database, Moon, Sun, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { DatasetSelector } from './DatasetSelector'
 import { useStats } from '@/contexts/StatsContext'
 import { useTheme } from 'next-themes'
@@ -30,27 +35,51 @@ const Layout = ({ children }: LayoutProps) => {
                         <div className="flex items-center gap-2 lg:gap-4">
                             <DatasetSelector />
                             <div className="flex items-center gap-2">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setShowStats(!showStats)}
-                                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                                >
-                                    <BarChart3 className="h-5 w-5" />
-                                </Button>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() =>
+                                                setShowStats(!showStats)
+                                            }
+                                            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <BarChart3 className="h-5 w-5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>
+                                            {showStats
+                                                ? 'Hide Stats'
+                                                : 'Show Stats'}
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
 
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={toggleTheme}
-                                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                                >
-                                    {theme === 'dark' ? (
-                                        <Sun className="h-5 w-5" />
-                                    ) : (
-                                        <Moon className="h-5 w-5" />
-                                    )}
-                                </Button>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={toggleTheme}
+                                            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            {theme === 'dark' ? (
+                                                <Sun className="h-5 w-5" />
+                                            ) : (
+                                                <Moon className="h-5 w-5" />
+                                            )}
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>
+                                            {theme === 'dark'
+                                                ? 'Switch to Light Mode'
+                                                : 'Switch to Dark Mode'}
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
                             </div>
                         </div>
                     </div>

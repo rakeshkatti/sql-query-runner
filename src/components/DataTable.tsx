@@ -46,7 +46,7 @@ export const DataTable: React.FC<DataTableProps> = ({
     const [sortColumn, setSortColumn] = useState<string | null>(null)
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
     const [currentPage, setCurrentPage] = useState(1)
-    const [pageSize, setPageSize] = useState(10)
+    const [pageSize, setPageSize] = useState(25)
 
     // Rest of the existing SELECT operation logic
     const filteredAndSortedData = useMemo(() => {
