@@ -1,22 +1,19 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table'
-import {
-    Download,
-    Search,
-    ArrowUpDown,
-    ChevronLeft,
-    ChevronRight,
-} from 'lucide-react'
+    flexRender,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getSortedRowModel,
+    useReactTable,
+    type ColumnDef,
+    type SortingState,
+    type ColumnFiltersState,
+} from '@tanstack/react-table'
+import { useVirtualizer } from '@tanstack/react-virtual'
+import { Download, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 
 interface DataTableProps {
     data: any[]
@@ -42,64 +39,6 @@ export const DataTable: React.FC<DataTableProps> = ({
     message,
     onExport,
 }) => {
-    const [searchTerm, setSearchTerm] = useState('')
-    const [sortColumn, setSortColumn] = useState<string | null>(null)
-    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
-    const [currentPage, setCurrentPage] = useState(1)
-    const [pageSize, setPageSize] = useState(25)
-
-    // Rest of the existing SELECT operation logic
-    const filteredAndSortedData = useMemo(() => {
-        const filtered = data.filter(row =>
-            Object.values(row).some(value =>
-                String(value).toLowerCase().includes(searchTerm.toLowerCase())
-            )
-        )
-
-        if (sortColumn) {
-            filtered.sort((a, b) => {
-                const aVal = a[sortColumn]
-                const bVal = b[sortColumn]
-
-                if (aVal === null || aVal === undefined) return 1
-                if (bVal === null || bVal === undefined) return -1
-
-                if (typeof aVal === 'number' && typeof bVal === 'number') {
-                    return sortDirection === 'asc' ? aVal - bVal : bVal - aVal
-                }
-
-                const aStr = String(aVal).toLowerCase()
-                const bStr = String(bVal).toLowerCase()
-                const comparison = aStr.localeCompare(bStr)
-                return sortDirection === 'asc' ? comparison : -comparison
-            })
-        }
-
-        return filtered
-    }, [data, searchTerm, sortColumn, sortDirection])
-
-    const totalPages = Math.ceil(filteredAndSortedData.length / pageSize)
-    const startIndex = (currentPage - 1) * pageSize
-    const paginatedData = filteredAndSortedData.slice(
-        startIndex,
-        startIndex + pageSize
-    )
-
-    const handleSort = (column: string) => {
-        if (sortColumn === column) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
-        } else {
-            setSortColumn(column)
-            setSortDirection('asc')
-        }
-        setCurrentPage(1)
-    }
-
-    const handlePageSizeChange = (newPageSize: number) => {
-        setPageSize(newPageSize)
-        setCurrentPage(1)
-    }
-
     // For non-SELECT operations, show a simple success message
     if (operationType && operationType !== 'SELECT') {
         return (
@@ -153,6 +92,104 @@ export const DataTable: React.FC<DataTableProps> = ({
         )
     }
 
+    // All hooks must be declared after the early return
+    const [sorting, setSorting] = useState<SortingState>([])
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+    const [globalFilter, setGlobalFilter] = useState('')
+    const [pageSize, setPageSize] = useState(25)
+
+    // Create column definitions for TanStack Table
+    const tableColumns = useMemo<ColumnDef<any>[]>(
+        () =>
+            columns.map(column => ({
+                accessorKey: column,
+                header: ({ column: col }) => {
+                    return (
+                        <Button
+                            variant="ghost"
+                            onClick={() =>
+                                col.toggleSorting(col.getIsSorted() === 'asc')
+                            }
+                            className="h-auto p-1 font-semibold hover:bg-gray-100 dark:hover:bg-slate-600 text-xs w-full justify-start"
+                        >
+                            <span className="truncate">{column}</span>
+                            {col.getIsSorted() === 'asc' ? (
+                                <ArrowUp className="ml-1 h-3 w-3 flex-shrink-0" />
+                            ) : col.getIsSorted() === 'desc' ? (
+                                <ArrowDown className="ml-1 h-3 w-3 flex-shrink-0" />
+                            ) : (
+                                <ArrowUpDown className="ml-1 h-3 w-3 flex-shrink-0" />
+                            )}
+                        </Button>
+                    )
+                },
+                cell: ({ getValue }) => {
+                    const value = getValue()
+                    return (
+                        <div className="font-mono text-xs py-2 truncate w-full">
+                            {String(value)}
+                        </div>
+                    )
+                },
+                size: 150, // Default column width
+                minSize: 120, // Minimum column width
+                maxSize: 300, // Maximum column width
+            })),
+        [columns]
+    )
+
+    const table = useReactTable({
+        data,
+        columns: tableColumns,
+        state: {
+            sorting,
+            columnFilters,
+            globalFilter,
+        },
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        onGlobalFilterChange: setGlobalFilter,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        columnResizeMode: 'onChange',
+    })
+
+    const { rows } = table.getRowModel()
+
+    // Apply page size limit to virtualized rows
+    const displayRows = rows.slice(0, pageSize)
+
+    // Virtualization setup
+    const parentRef = useRef<HTMLDivElement>(null)
+    const headerRef = useRef<HTMLDivElement>(null)
+
+    const virtualizer = useVirtualizer({
+        count: displayRows.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 45, // Slightly smaller row height
+        overscan: 10, // Render extra rows for smooth scrolling
+    })
+
+    // Sync horizontal scrolling between header and body
+    const handleBodyScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        if (headerRef.current) {
+            headerRef.current.scrollLeft = e.currentTarget.scrollLeft
+        }
+    }
+
+    const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        if (parentRef.current) {
+            parentRef.current.scrollLeft = e.currentTarget.scrollLeft
+        }
+    }
+
+    // Calculate total table width for consistent sizing
+    const totalWidth =
+        table
+            .getHeaderGroups()[0]
+            ?.headers.reduce((sum, header) => sum + header.getSize(), 0) || 0
+
     return (
         <Card className="dark:bg-slate-800 dark:border-slate-700">
             <CardHeader className="pb-3">
@@ -162,8 +199,8 @@ export const DataTable: React.FC<DataTableProps> = ({
                             Query Results
                         </CardTitle>
                         <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                            {filteredAndSortedData.length} rows • Executed in{' '}
-                            {queryExecutionTime}ms
+                            {displayRows.length} of {rows.length} rows •
+                            Executed in {queryExecutionTime}ms
                         </p>
                     </div>
                     <div className="flex gap-2">
@@ -189,32 +226,37 @@ export const DataTable: React.FC<DataTableProps> = ({
                         </Button>
                     </div>
                 </div>
-                <div className="mt-4 flex gap-4 items-center">
-                    <div className="relative flex-1">
+                <div className="mt-4 flex gap-4 items-center flex-wrap">
+                    <div className="relative flex-1 min-w-[200px]">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
                             placeholder="Search in results..."
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
+                            value={globalFilter ?? ''}
+                            onChange={e => setGlobalFilter(e.target.value)}
                             className="pl-10"
                         />
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                            Rows per page:
+                        <span className="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                            Show:
                         </span>
                         <select
                             value={pageSize}
-                            onChange={e =>
-                                handlePageSizeChange(Number(e.target.value))
-                            }
+                            onChange={e => setPageSize(Number(e.target.value))}
                             className="px-2 py-1 border rounded text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                         >
                             <option value={25}>25</option>
                             <option value={50}>50</option>
                             <option value={100}>100</option>
                             <option value={500}>500</option>
+                            <option value={1000}>1000</option>
+                            <option value={rows.length}>
+                                All ({rows.length})
+                            </option>
                         </select>
+                        <span className="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                            rows
+                        </span>
                     </div>
                 </div>
             </CardHeader>
@@ -229,99 +271,109 @@ export const DataTable: React.FC<DataTableProps> = ({
                         </div>
                     </div>
                 ) : (
-                    <>
-                        <div className="overflow-auto custom-scrollbar max-h-[500px] border rounded dark:border-slate-600">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-gray-50 dark:bg-slate-700">
-                                        {columns.map(column => (
-                                            <TableHead
-                                                key={column}
-                                                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-600 sticky top-0 bg-gray-50 dark:bg-slate-700 font-semibold"
-                                                onClick={() =>
-                                                    handleSort(column)
-                                                }
+                    <div className="border rounded-md dark:border-slate-600 overflow-hidden">
+                        {/* Synchronized Table Header */}
+                        <div
+                            ref={headerRef}
+                            className="overflow-x-auto scrollbar-hide"
+                            onScroll={handleHeaderScroll}
+                        >
+                            <div
+                                className="bg-gray-50 dark:bg-slate-700 border-b dark:border-slate-600"
+                                style={{ width: `${totalWidth}px` }}
+                            >
+                                {table.getHeaderGroups().map(headerGroup => (
+                                    <div key={headerGroup.id} className="flex">
+                                        {headerGroup.headers.map(header => (
+                                            <div
+                                                key={header.id}
+                                                className="px-3 py-2 text-left font-semibold border-r dark:border-slate-600 last:border-r-0 flex-shrink-0"
+                                                style={{
+                                                    width: `${header.getSize()}px`,
+                                                }}
                                             >
-                                                <div className="flex items-center gap-2">
-                                                    {column}
-                                                    <ArrowUpDown className="h-4 w-4 text-gray-400" />
-                                                </div>
-                                            </TableHead>
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                          header.column
+                                                              .columnDef.header,
+                                                          header.getContext()
+                                                      )}
+                                            </div>
                                         ))}
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {paginatedData.map((row, index) => (
-                                        <TableRow
-                                            key={index}
-                                            className={`hover:bg-gray-50 dark:hover:bg-slate-700 ${
-                                                index % 2 === 0
-                                                    ? 'bg-white dark:bg-slate-800'
-                                                    : 'bg-gray-25 dark:bg-slate-750'
-                                            }`}
-                                        >
-                                            {columns.map(column => (
-                                                <TableCell
-                                                    key={column}
-                                                    className="font-mono text-sm py-3"
-                                                >
-                                                    {String(row[column])}
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-between mt-4">
-                                <div className="text-sm text-gray-600 dark:text-gray-300">
-                                    Showing {(currentPage - 1) * pageSize + 1}{' '}
-                                    to{' '}
-                                    {Math.min(
-                                        currentPage * pageSize,
-                                        filteredAndSortedData.length
-                                    )}{' '}
-                                    of {filteredAndSortedData.length} results
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        onClick={() =>
-                                            setCurrentPage(
-                                                Math.max(1, currentPage - 1)
+                        {/* Synchronized Virtualized Table Body */}
+                        <div
+                            ref={parentRef}
+                            className="h-[500px] overflow-auto custom-scrollbar"
+                            onScroll={handleBodyScroll}
+                        >
+                            <div style={{ width: `${totalWidth}px` }}>
+                                <div
+                                    style={{
+                                        height: `${virtualizer.getTotalSize()}px`,
+                                        width: '100%',
+                                        position: 'relative',
+                                    }}
+                                >
+                                    {virtualizer
+                                        .getVirtualItems()
+                                        .map(virtualRow => {
+                                            const row =
+                                                displayRows[virtualRow.index]
+                                            return (
+                                                <div
+                                                    key={row.id}
+                                                    className={`absolute top-0 left-0 flex hover:bg-gray-50 dark:hover:bg-slate-700 ${
+                                                        virtualRow.index % 2 ===
+                                                        0
+                                                            ? 'bg-white dark:bg-slate-800'
+                                                            : 'bg-gray-25 dark:bg-slate-750'
+                                                    }`}
+                                                    style={{
+                                                        height: `${virtualRow.size}px`,
+                                                        transform: `translateY(${virtualRow.start}px)`,
+                                                        width: `${totalWidth}px`,
+                                                    }}
+                                                >
+                                                    {row
+                                                        .getVisibleCells()
+                                                        .map(cell => (
+                                                            <div
+                                                                key={cell.id}
+                                                                className="px-3 py-1 border-r dark:border-slate-600 last:border-r-0 flex-shrink-0"
+                                                                style={{
+                                                                    width: `${cell.column.getSize()}px`,
+                                                                }}
+                                                            >
+                                                                {flexRender(
+                                                                    cell.column
+                                                                        .columnDef
+                                                                        .cell,
+                                                                    cell.getContext()
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                </div>
                                             )
-                                        }
-                                        disabled={currentPage === 1}
-                                        variant="outline"
-                                        size="sm"
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                        Previous
-                                    </Button>
-                                    <span className="text-sm text-gray-600 dark:text-gray-300">
-                                        Page {currentPage} of {totalPages}
-                                    </span>
-                                    <Button
-                                        onClick={() =>
-                                            setCurrentPage(
-                                                Math.min(
-                                                    totalPages,
-                                                    currentPage + 1
-                                                )
-                                            )
-                                        }
-                                        disabled={currentPage === totalPages}
-                                        variant="outline"
-                                        size="sm"
-                                    >
-                                        Next
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
+                                        })}
                                 </div>
                             </div>
-                        )}
-                    </>
+                        </div>
+
+                        {/* Table Footer with Stats */}
+                        <div className="bg-gray-50 dark:bg-slate-700 border-t dark:border-slate-600 px-4 py-2">
+                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                                Showing {displayRows.length} of {rows.length}{' '}
+                                filtered rows
+                                {globalFilter && ` (${data.length} total)`}
+                            </div>
+                        </div>
+                    </div>
                 )}
             </CardContent>
         </Card>
