@@ -2,10 +2,6 @@
 
 A modern, high-performance web-based SQL query runner built with React, TypeScript, and Vite. This application provides a comprehensive interface for executing SQL queries, managing datasets, and visualizing results with advanced table features.
 
-## 🎥 Demo Video
-
-_[A 3-minute walkthrough video showcasing the implementation and query execution features will be added here]_
-
 ## ✨ Features
 
 ### Core Functionality
