@@ -63,13 +63,6 @@ A modern, high-performance web-based SQL query runner built with React, TypeScri
 - **Prettier** - Code formatting
 - **TypeScript ESLint** - TypeScript-specific linting rules
 
-## 📊 Performance Metrics
-
-- **Bundle Size**: 565.29 kB (174.20 kB gzipped)
-- **CSS Size**: 49.58 kB (9.40 kB gzipped)
-- **Build Time**: ~1.5 seconds
-- **Modules Transformed**: 1,767
-
 ### Runtime Performance
 
 - **Largest Contentful Paint (LCP)**: Less than 0.5s
@@ -81,20 +74,6 @@ A modern, high-performance web-based SQL query runner built with React, TypeScri
 - **Virtualized Rendering**: Only renders visible table rows
 - **Efficient State Management**: Context API with selective subscriptions
 - **Optimized Bundle**: Minification via Vite
-
-## 🗄 Datasets
-
-The application includes 7 comprehensive datasets with realistic business data:
-
-1. **Employees** (150 records, 15 columns) - Employee information and organizational structure
-2. **Customers** (500 records, 11 columns) - Customer contact information and company details
-3. **Products** (200 records, 10 columns) - Product catalog with pricing and inventory
-4. **Orders** (2,000 records, 14 columns) - Order transactions and customer relationships
-5. **Order Details** (5,000 records, 5 columns) - Detailed order line items
-6. **Categories** (8 records, 3 columns) - Product categorization
-7. **Suppliers** (30 records, 11 columns) - Supplier contact and company information
-
-Each dataset includes 10+ sample queries covering various SQL operations and complexity levels.
 
 ## 🚀 Getting Started
 
@@ -157,13 +136,8 @@ npm run fix-all      # Fix all issues (lint + format)
 - **Export Data**: Export results as CSV or JSON using the export buttons
 - **Theme Toggle**: Switch between light and dark modes
 - **Stats Panel**: Toggle statistics display for query metrics
-- **Customize Stats**: Click the settings icon in the stats section to:
-    - Show/hide individual stat cards
-    - Choose from 6 available metrics: Dataset, Total Records, Queries, Avg Speed, Total Time, Max Speed
-    - Reset to default configuration
-    - Automatic grid layout adjustment based on visible cards
 
-### Keyboard Shortcuts
+<!-- ### Keyboard Shortcuts
 
 **Windows/Linux:**
 
@@ -177,7 +151,7 @@ npm run fix-all      # Fix all issues (lint + format)
 - `Cmd+Enter` - Execute query
 - `Cmd+S` - Save current query
 - `F11` - Toggle fullscreen editor
-- `Escape` - Exit fullscreen mode
+- `Escape` - Exit fullscreen mode -->
 
 ### Theme Customization
 
