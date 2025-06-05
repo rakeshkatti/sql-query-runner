@@ -6,6 +6,15 @@ export interface QueryResult {
     columns: string[]
     executionTime: number
     rowCount: number
+    operationType?:
+        | 'SELECT'
+        | 'CREATE'
+        | 'INSERT'
+        | 'UPDATE'
+        | 'DELETE'
+        | 'DROP'
+        | 'DUMP'
+    message?: string
 }
 
 export const simulateQueryExecution = (query: string): Promise<QueryResult> => {
@@ -23,16 +32,144 @@ export const simulateQueryExecution = (query: string): Promise<QueryResult> => {
     })
 }
 
+const getQueryType = (
+    query: string
+): 'SELECT' | 'CREATE' | 'INSERT' | 'UPDATE' | 'DELETE' | 'DROP' | 'DUMP' => {
+    const normalizedQuery = query.toLowerCase().trim()
+
+    if (normalizedQuery.startsWith('create')) return 'CREATE'
+    if (normalizedQuery.startsWith('insert')) return 'INSERT'
+    if (normalizedQuery.startsWith('update')) return 'UPDATE'
+    if (normalizedQuery.startsWith('delete')) return 'DELETE'
+    if (normalizedQuery.startsWith('drop')) return 'DROP'
+    if (normalizedQuery.startsWith('dump')) return 'DUMP'
+    return 'SELECT'
+}
+
 const parseAndExecuteQuery = (
     query: string
 ): Omit<QueryResult, 'executionTime'> => {
     const normalizedQuery = query.toLowerCase().trim()
+    const operationType = getQueryType(query)
 
+    // Handle non-SELECT operations
+    if (operationType !== 'SELECT') {
+        return handleNonSelectOperation(query, operationType)
+    }
+
+    // Handle SELECT operations (existing logic)
+    return handleSelectOperation(normalizedQuery)
+}
+
+const handleNonSelectOperation = (
+    query: string,
+    operationType: 'CREATE' | 'INSERT' | 'UPDATE' | 'DELETE' | 'DROP' | 'DUMP'
+): Omit<QueryResult, 'executionTime'> => {
+    const normalizedQuery = query.toLowerCase().trim()
+
+    switch (operationType) {
+        case 'CREATE':
+            const tableName = extractTableName(normalizedQuery, 'create')
+            return {
+                data: [],
+                columns: ['Result'],
+                rowCount: 0,
+                operationType,
+                message: `Table '${tableName}' created successfully`,
+            }
+
+        case 'INSERT':
+            const insertTable = extractTableName(normalizedQuery, 'insert')
+            const insertCount = Math.floor(Math.random() * 5) + 1 // Simulate 1-5 rows inserted
+            return {
+                data: [],
+                columns: ['Result'],
+                rowCount: insertCount,
+                operationType,
+                message: `${insertCount} row(s) inserted into '${insertTable}'`,
+            }
+
+        case 'UPDATE':
+            const updateTable = extractTableName(normalizedQuery, 'update')
+            const updateCount = Math.floor(Math.random() * 20) + 1 // Simulate 1-20 rows updated
+            return {
+                data: [],
+                columns: ['Result'],
+                rowCount: updateCount,
+                operationType,
+                message: `${updateCount} row(s) updated in '${updateTable}'`,
+            }
+
+        case 'DELETE':
+            const deleteTable = extractTableName(normalizedQuery, 'delete')
+            const deleteCount = Math.floor(Math.random() * 10) + 1 // Simulate 1-10 rows deleted
+            return {
+                data: [],
+                columns: ['Result'],
+                rowCount: deleteCount,
+                operationType,
+                message: `${deleteCount} row(s) deleted from '${deleteTable}'`,
+            }
+
+        case 'DROP':
+            const dropTable = extractTableName(normalizedQuery, 'drop')
+            return {
+                data: [],
+                columns: ['Result'],
+                rowCount: 0,
+                operationType,
+                message: `Table '${dropTable}' dropped successfully`,
+            }
+
+        case 'DUMP':
+            const dumpTable = extractTableName(normalizedQuery, 'dump')
+            const dumpPath = extractDumpPath(normalizedQuery)
+            return {
+                data: [],
+                columns: ['Result'],
+                rowCount: 0,
+                operationType,
+                message: `Table '${dumpTable}' dumped to '${dumpPath}' successfully`,
+            }
+
+        default:
+            return {
+                data: [],
+                columns: ['Result'],
+                rowCount: 0,
+                operationType,
+                message: 'Operation completed successfully',
+            }
+    }
+}
+
+const extractTableName = (query: string, operation: string): string => {
+    const patterns = {
+        create: /create\s+table\s+(\w+)/i,
+        insert: /insert\s+into\s+(\w+)/i,
+        update: /update\s+(\w+)/i,
+        delete: /delete\s+from\s+(\w+)/i,
+        drop: /drop\s+table\s+(\w+)/i,
+        dump: /dump\s+(\w+)/i,
+    }
+
+    const match = query.match(patterns[operation as keyof typeof patterns])
+    return match ? match[1] : 'unknown_table'
+}
+
+const extractDumpPath = (query: string): string => {
+    const match = query.match(/to\s+['"]([^'"]+)['"]/i)
+    return match ? match[1] : '/backup/dump.sql'
+}
+
+const handleSelectOperation = (
+    normalizedQuery: string
+): Omit<QueryResult, 'executionTime'> => {
     // Simple query parsing to determine which dataset to use
     let targetDataset: Dataset | undefined
 
     for (const dataset of datasets) {
-        if (normalizedQuery.includes(dataset.name)) {
+        if (normalizedQuery.includes(dataset.name.toLowerCase())) {
             targetDataset = dataset
             break
         }
@@ -144,6 +281,7 @@ const parseAndExecuteQuery = (
         data: resultData,
         columns: resultColumns,
         rowCount: resultData.length,
+        operationType: 'SELECT',
     }
 }
 

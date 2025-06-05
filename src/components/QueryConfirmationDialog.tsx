@@ -80,8 +80,10 @@ export const QueryConfirmationDialog: React.FC<
                     >
                         {content.title}
                     </AlertDialogTitle>
-                    <AlertDialogDescription className="space-y-3">
-                        <p>{content.description}</p>
+                    <AlertDialogDescription>
+                        {content.description}
+                    </AlertDialogDescription>
+                    <div className="space-y-3 mt-3">
                         <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md">
                             <code className="text-sm font-mono">{query}</code>
                         </div>
@@ -100,7 +102,7 @@ export const QueryConfirmationDialog: React.FC<
                                 />
                             </div>
                         )}
-                    </AlertDialogDescription>
+                    </div>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={handleCancel}>

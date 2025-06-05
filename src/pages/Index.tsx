@@ -36,6 +36,15 @@ const Index = () => {
         data: any[] // eslint-disable-line @typescript-eslint/no-explicit-any
         columns: string[]
         executionTime: number
+        operationType?:
+            | 'SELECT'
+            | 'CREATE'
+            | 'INSERT'
+            | 'UPDATE'
+            | 'DELETE'
+            | 'DROP'
+            | 'DUMP'
+        message?: string
     }>({
         data: [],
         columns: [],
@@ -114,6 +123,8 @@ const Index = () => {
                 data: result.data,
                 columns: result.columns,
                 executionTime: result.executionTime,
+                operationType: result.operationType,
+                message: result.message,
             })
 
             // Add to history
@@ -263,6 +274,8 @@ const Index = () => {
                         columns={queryResult.columns}
                         queryExecutionTime={queryResult.executionTime}
                         onExport={handleExport}
+                        operationType={queryResult.operationType}
+                        message={queryResult.message}
                     />
                 </div>
             </div>

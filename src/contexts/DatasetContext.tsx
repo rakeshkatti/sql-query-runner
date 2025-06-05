@@ -22,7 +22,7 @@ interface DatasetProviderProps {
 export const DatasetProvider: React.FC<DatasetProviderProps> = ({
     children,
 }) => {
-    const [selectedDataset, setSelectedDataset] = useState('employees')
+    const [selectedDataset, setSelectedDataset] = useState('Employees')
 
     const currentDataset = datasets.find(d => d.name === selectedDataset)
 

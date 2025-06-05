@@ -19,9 +19,18 @@ import {
 } from 'lucide-react'
 
 interface DataTableProps {
-    data: any[] // eslint-disable-line @typescript-eslint/no-explicit-any
+    data: any[]
     columns: string[]
     queryExecutionTime: number
+    operationType?:
+        | 'SELECT'
+        | 'CREATE'
+        | 'INSERT'
+        | 'UPDATE'
+        | 'DELETE'
+        | 'DROP'
+        | 'DUMP'
+    message?: string
     onExport: (format: 'csv' | 'json') => void
 }
 
@@ -29,20 +38,21 @@ export const DataTable: React.FC<DataTableProps> = ({
     data,
     columns,
     queryExecutionTime,
+    operationType,
+    message,
     onExport,
 }) => {
     const [searchTerm, setSearchTerm] = useState('')
     const [sortColumn, setSortColumn] = useState<string | null>(null)
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
     const [currentPage, setCurrentPage] = useState(1)
-    const [pageSize, setPageSize] = useState(50)
+    const [pageSize, setPageSize] = useState(10)
 
+    // Rest of the existing SELECT operation logic
     const filteredAndSortedData = useMemo(() => {
-        const filtered = data.filter(row =>
-            columns.some(col =>
-                String(row[col])
-                    .toLowerCase()
-                    .includes(searchTerm.toLowerCase())
+        let filtered = data.filter(row =>
+            Object.values(row).some(value =>
+                String(value).toLowerCase().includes(searchTerm.toLowerCase())
             )
         )
 
@@ -51,30 +61,29 @@ export const DataTable: React.FC<DataTableProps> = ({
                 const aVal = a[sortColumn]
                 const bVal = b[sortColumn]
 
+                if (aVal === null || aVal === undefined) return 1
+                if (bVal === null || bVal === undefined) return -1
+
                 if (typeof aVal === 'number' && typeof bVal === 'number') {
                     return sortDirection === 'asc' ? aVal - bVal : bVal - aVal
                 }
 
                 const aStr = String(aVal).toLowerCase()
                 const bStr = String(bVal).toLowerCase()
-
-                if (sortDirection === 'asc') {
-                    return aStr.localeCompare(bStr)
-                } else {
-                    return bStr.localeCompare(aStr)
-                }
+                const comparison = aStr.localeCompare(bStr)
+                return sortDirection === 'asc' ? comparison : -comparison
             })
         }
 
         return filtered
-    }, [data, columns, searchTerm, sortColumn, sortDirection])
-
-    const paginatedData = useMemo(() => {
-        const startIndex = (currentPage - 1) * pageSize
-        return filteredAndSortedData.slice(startIndex, startIndex + pageSize)
-    }, [filteredAndSortedData, currentPage, pageSize])
+    }, [data, searchTerm, sortColumn, sortDirection])
 
     const totalPages = Math.ceil(filteredAndSortedData.length / pageSize)
+    const startIndex = (currentPage - 1) * pageSize
+    const paginatedData = filteredAndSortedData.slice(
+        startIndex,
+        startIndex + pageSize
+    )
 
     const handleSort = (column: string) => {
         if (sortColumn === column) {
@@ -89,6 +98,59 @@ export const DataTable: React.FC<DataTableProps> = ({
     const handlePageSizeChange = (newPageSize: number) => {
         setPageSize(newPageSize)
         setCurrentPage(1)
+    }
+
+    // For non-SELECT operations, show a simple success message
+    if (operationType && operationType !== 'SELECT') {
+        return (
+            <Card className="dark:bg-slate-800 dark:border-slate-700">
+                <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-xl font-bold text-gray-800 dark:text-white">
+                                {operationType} Operation Result
+                            </CardTitle>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                                Executed in {queryExecutionTime}ms
+                            </p>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-center py-12">
+                        <div className="text-center">
+                            <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                                <svg
+                                    className="w-8 h-8 text-green-600 dark:text-green-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                Operation Successful
+                            </h3>
+                            <div className="text-gray-600 dark:text-gray-300 mb-4">
+                                {message ||
+                                    `${operationType} operation completed successfully`}
+                            </div>
+                            {data.length > 0 && (
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    Rows affected: {data.length}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        )
     }
 
     return (
@@ -110,6 +172,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                             variant="outline"
                             size="sm"
                             className="flex items-center gap-2"
+                            disabled={data.length === 0}
                         >
                             <Download className="h-4 w-4" />
                             CSV
@@ -119,6 +182,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                             variant="outline"
                             size="sm"
                             className="flex items-center gap-2"
+                            disabled={data.length === 0}
                         >
                             <Download className="h-4 w-4" />
                             JSON

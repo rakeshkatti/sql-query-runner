@@ -1,25 +1,20 @@
-import { useEffect, useState } from 'react'
 import { Database, Moon, Sun, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DatasetSelector } from './DatasetSelector'
 import { useStats } from '@/contexts/StatsContext'
+import { useTheme } from 'next-themes'
 
 interface LayoutProps {
     children: React.ReactNode
 }
 
 const Layout = ({ children }: LayoutProps) => {
-    const [isDarkMode, setIsDarkMode] = useState(false)
+    const { theme, setTheme } = useTheme()
     const { showStats, setShowStats } = useStats()
 
-    // Apply dark mode to document
-    useEffect(() => {
-        if (isDarkMode) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
-    }, [isDarkMode])
+    const toggleTheme = () => {
+        setTheme(theme === 'dark' ? 'light' : 'dark')
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
@@ -47,10 +42,10 @@ const Layout = ({ children }: LayoutProps) => {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => setIsDarkMode(!isDarkMode)}
+                                    onClick={toggleTheme}
                                     className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                                 >
-                                    {isDarkMode ? (
+                                    {theme === 'dark' ? (
                                         <Sun className="h-5 w-5" />
                                     ) : (
                                         <Moon className="h-5 w-5" />
