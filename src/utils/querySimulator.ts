@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-case-declarations */
 import { type Dataset, datasets } from '@/data/sampleData'
 
 export interface QueryResult {

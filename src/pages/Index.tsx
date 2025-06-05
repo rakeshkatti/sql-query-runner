@@ -33,7 +33,7 @@ interface SavedQuery {
 const Index = () => {
     const [currentQuery, setCurrentQuery] = useState('')
     const [queryResult, setQueryResult] = useState<{
-        data: any[] // eslint-disable-line @typescript-eslint/no-explicit-any
+        data: any[]
         columns: string[]
         executionTime: number
         operationType?:

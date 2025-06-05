@@ -50,7 +50,7 @@ export const DataTable: React.FC<DataTableProps> = ({
 
     // Rest of the existing SELECT operation logic
     const filteredAndSortedData = useMemo(() => {
-        let filtered = data.filter(row =>
+        const filtered = data.filter(row =>
             Object.values(row).some(value =>
                 String(value).toLowerCase().includes(searchTerm.toLowerCase())
             )
