@@ -30,14 +30,13 @@ _[A 3-minute walkthrough video showcasing the implementation and query execution
 - **Column Sorting**: Click column headers to sort data ascending/descending
 - **Global Search**: Real-time filtering across all columns
 - **Configurable Page Size**: Choose from 25, 50, 100, 500, 1000, or All rows
-- **Synchronized Scrolling**: Header and data columns stay perfectly aligned
 
 ### Safety & Confirmation
 
 - **Query Confirmation**: Safety dialogs for destructive operations (CREATE, DELETE, DROP, DUMP)
 - **Operation Feedback**: Clear success/error messages with execution statistics
 - **Real-time Stats**: Track total queries executed, execution time, and cumulative result rows
-- **Customizable Metrics**: Choose from 6 different statistics cards including dataset info, query counts, performance metrics, and timing data
+- **Customizable Metrics**: Choose from different statistics cards including dataset info, query counts, performance metrics, and timing data. We can add more here based on requirement.
 
 ## 🛠 Tech Stack
 
@@ -70,8 +69,6 @@ _[A 3-minute walkthrough video showcasing the implementation and query execution
 
 ## 📊 Performance Metrics
 
-### Build Performance
-
 - **Bundle Size**: 565.29 kB (174.20 kB gzipped)
 - **CSS Size**: 49.58 kB (9.40 kB gzipped)
 - **Build Time**: ~1.5 seconds
@@ -79,21 +76,15 @@ _[A 3-minute walkthrough video showcasing the implementation and query execution
 
 ### Runtime Performance
 
-- **Initial Load Time**: < 2 seconds on modern browsers
-- **Table Rendering**: Handles 5,000+ rows with smooth scrolling
-- **Query Execution**: Simulated queries execute in 50-500ms
-- **Theme Switching**: Instant with no layout shift
-- **Search/Filter**: Real-time with no noticeable lag
+- **Largest Contentful Paint (LCP)**: Less than 0.5s
+- **Cumulative Layout Shift (CLS)**: Zero
+- **Interaction to Next Paint (INP)**: Less than 50ms
 
 ### Optimizations Implemented
 
-1. **Code Splitting**: Dynamic imports for route-based splitting
-2. **Virtualized Rendering**: Only renders visible table rows
-3. **Memoized Components**: React.memo and useMemo for expensive calculations
-4. **Efficient State Management**: Context API with selective subscriptions
-5. **Optimized Bundle**: Tree-shaking and minification via Vite
-6. **CSS Optimization**: Tailwind CSS purging and compression
-7. **Compact UI Design**: Reduced padding and optimized spacing for better information density
+- **Virtualized Rendering**: Only renders visible table rows
+- **Efficient State Management**: Context API with selective subscriptions
+- **Optimized Bundle**: Minification via Vite
 
 ## 🗄 Datasets
 
@@ -178,107 +169,25 @@ npm run fix-all      # Fix all issues (lint + format)
 
 ### Keyboard Shortcuts
 
+**Windows/Linux:**
+
 - `Ctrl+Enter` - Execute query
 - `Ctrl+S` - Save current query
 - `F11` - Toggle fullscreen editor
+- `Escape` - Exit fullscreen mode
 
-### SQL Operations Supported
+**Mac:**
 
-- **SELECT** - Data retrieval with full result display
-- **CREATE** - Table/view creation with success confirmation
-- **INSERT** - Data insertion with affected row count
-- **UPDATE** - Data modification with affected row count
-- **DELETE** - Data removal with affected row count
-- **DROP** - Table/view deletion with confirmation dialog
-- **DUMP** - Data export simulation with file path display
-
-## 🏗 Architecture
-
-### Component Structure
-
-```
-src/
-├── components/          # Reusable UI components
-│   ├── ui/             # Base UI components (Radix + Tailwind)
-│   ├── DataTable.tsx   # High-performance virtualized table
-│   ├── QueryEditor.tsx # Monaco-based SQL editor
-│   ├── Layout.tsx      # Main application layout
-│   └── ...
-├── contexts/           # React Context providers
-├── data/              # Sample datasets and schemas
-├── pages/             # Route components
-├── utils/             # Utility functions and query simulator
-└── lib/               # Shared libraries and configurations
-```
-
-### State Management
-
-- **React Context** for global state (datasets, stats, theme)
-- **Local State** for component-specific data
-- **Custom Hooks** for reusable stateful logic
-
-### Performance Considerations
-
-- **Virtualization** for large datasets
-- **Memoization** for expensive computations
-- **Code Splitting** for optimal loading
-- **Efficient Re-renders** with proper dependency arrays
-
-## 🔧 Customization
-
-### Adding New Datasets
-
-1. Define dataset structure in `src/data/sampleData.ts`
-2. Include sample queries for the dataset
-3. Dataset will automatically appear in the selector
-
-### Extending SQL Operations
-
-1. Add operation logic in `src/utils/querySimulator.ts`
-2. Update the `QueryResult` interface if needed
-3. Handle new operation types in `DataTable.tsx`
+- `Cmd+Enter` - Execute query
+- `Cmd+S` - Save current query
+- `F11` - Toggle fullscreen editor
+- `Escape` - Exit fullscreen mode
 
 ### Theme Customization
 
 1. Modify Tailwind configuration in `tailwind.config.ts`
 2. Update CSS variables in `src/index.css`
 3. Themes automatically apply to all components
-
-## 🚀 Deployment
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-### Deploy to Vercel
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel --prod
-```
-
-### Deploy to Netlify
-
-1. Build the project: `npm run build`
-2. Upload the `dist` folder to Netlify
-3. Configure redirects for SPA routing
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgments
 

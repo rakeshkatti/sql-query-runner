@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Play, Save, Maximize2, Minimize2 } from 'lucide-react'
@@ -13,6 +13,22 @@ interface QueryEditorProps {
     isLoading: boolean
 }
 
+// Custom hook for platform detection
+const usePlatform = () => {
+    const [isMac, setIsMac] = useState(false)
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setIsMac(
+                navigator.platform.includes('Mac') ||
+                    navigator.userAgent.includes('Mac')
+            )
+        }
+    }, [])
+
+    return { isMac, modKey: isMac ? 'Cmd' : 'Ctrl' }
+}
+
 export const QueryEditor: React.FC<QueryEditorProps> = ({
     onRunQuery,
     onSaveQuery,
@@ -23,6 +39,7 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
     const editorRef = useRef<any>(null)
     const { theme } = useTheme()
     const [isFullscreen, setIsFullscreen] = React.useState(false)
+    const { modKey } = usePlatform()
 
     const handleRunQuery = () => {
         if (currentQuery.trim()) {
@@ -101,14 +118,68 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
             },
         })
 
-        // Add keyboard shortcuts
+        // Add keyboard shortcuts with proper event handling
         editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-            handleRunQuery()
+            console.log('Monaco Ctrl/Cmd+Enter pressed')
+            if (currentQuery.trim()) {
+                onRunQuery(currentQuery)
+            }
         })
 
-        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-            handleSaveQuery()
-        })
+        editor.addCommand(
+            monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+            (e: any) => {
+                console.log('Monaco Ctrl/Cmd+S pressed')
+                e?.preventDefault?.()
+                if (currentQuery.trim()) {
+                    onSaveQuery(currentQuery)
+                }
+            }
+        )
+
+        // Alternative: Add global keyboard event listener as backup
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const isCtrlOrCmd = e.ctrlKey || e.metaKey
+
+            if (isCtrlOrCmd && e.key === 'Enter') {
+                console.log('Global Ctrl/Cmd+Enter pressed')
+                e.preventDefault()
+                e.stopPropagation()
+                if (currentQuery.trim()) {
+                    onRunQuery(currentQuery)
+                }
+            }
+
+            if (isCtrlOrCmd && e.key === 's') {
+                console.log('Global Ctrl/Cmd+S pressed')
+                e.preventDefault()
+                e.stopPropagation()
+                if (currentQuery.trim()) {
+                    onSaveQuery(currentQuery)
+                }
+            }
+        }
+
+        // Add event listener to the editor container
+        const editorContainer = editor.getContainerDomNode()
+        if (editorContainer) {
+            editorContainer.addEventListener('keydown', handleKeyDown, true) // Use capture phase
+        }
+
+        // Also add to document as final fallback
+        document.addEventListener('keydown', handleKeyDown, true)
+
+        // Store cleanup function
+        editor._keydownCleanup = () => {
+            if (editorContainer) {
+                editorContainer.removeEventListener(
+                    'keydown',
+                    handleKeyDown,
+                    true
+                )
+            }
+            document.removeEventListener('keydown', handleKeyDown, true)
+        }
 
         // Focus the editor
         editor.focus()
@@ -126,7 +197,15 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
         }
 
         document.addEventListener('keydown', handleKeyDown)
-        return () => document.removeEventListener('keydown', handleKeyDown)
+
+        // Cleanup function
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown)
+            // Clean up editor event listeners if they exist
+            if (editorRef.current?._keydownCleanup) {
+                editorRef.current._keydownCleanup()
+            }
+        }
     }, [isFullscreen])
 
     const editorOptions = {
@@ -220,7 +299,8 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
                 </div>
                 <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex justify-between">
                     <span>
-                        Tip: Press Ctrl+Enter to run query, Ctrl+S to save
+                        Tip: Press {modKey}+Enter to run query, {modKey}+S to
+                        save
                     </span>
                     {isFullscreen && (
                         <span>Press Escape to exit fullscreen</span>
