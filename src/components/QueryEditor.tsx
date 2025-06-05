@@ -101,56 +101,42 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
             },
         })
 
-        // Add keyboard shortcuts with proper event handling
-        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-            console.log('Ctrl/Cmd+Enter pressed')
-            if (currentQuery.trim()) {
-                onRunQuery(currentQuery)
-            }
+        // Add keyboard shortcuts using actions (more reliable than commands)
+        editor.addAction({
+            id: 'run-query',
+            label: 'Run Query',
+            keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
+            run: () => {
+                console.log(
+                    'Action: Run Query triggered, currentQuery:',
+                    currentQuery
+                )
+                if (currentQuery.trim()) {
+                    console.log('Calling onRunQuery')
+                    onRunQuery(currentQuery)
+                } else {
+                    console.log('Query is empty')
+                }
+            },
         })
 
-        editor.addCommand(
-            monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
-            (e: any) => {
-                console.log('Ctrl/Cmd+S pressed')
-                e?.preventDefault?.()
+        editor.addAction({
+            id: 'save-query',
+            label: 'Save Query',
+            keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
+            run: () => {
+                console.log(
+                    'Action: Save Query triggered, currentQuery:',
+                    currentQuery
+                )
                 if (currentQuery.trim()) {
+                    console.log('Calling onSaveQuery')
                     onSaveQuery(currentQuery)
+                } else {
+                    console.log('Query is empty')
                 }
-            }
-        )
-
-        // Alternative: Add global keyboard event listener as backup
-        const handleKeyDown = (e: KeyboardEvent) => {
-            const isCtrlOrCmd = e.ctrlKey || e.metaKey
-
-            if (isCtrlOrCmd && e.key === 'Enter') {
-                e.preventDefault()
-                if (currentQuery.trim()) {
-                    onRunQuery(currentQuery)
-                }
-            }
-
-            if (isCtrlOrCmd && e.key === 's') {
-                e.preventDefault()
-                if (currentQuery.trim()) {
-                    onSaveQuery(currentQuery)
-                }
-            }
-        }
-
-        // Add event listener to the editor container
-        const editorContainer = editor.getContainerDomNode()
-        if (editorContainer) {
-            editorContainer.addEventListener('keydown', handleKeyDown)
-        }
-
-        // Store cleanup function
-        editor._keydownCleanup = () => {
-            if (editorContainer) {
-                editorContainer.removeEventListener('keydown', handleKeyDown)
-            }
-        }
+            },
+        })
 
         // Focus the editor
         editor.focus()
@@ -263,10 +249,16 @@ export const QueryEditor: React.FC<QueryEditorProps> = ({
                 <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex justify-between">
                     <span>
                         Tip: Press{' '}
-                        {navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'}
+                        {typeof window !== 'undefined' &&
+                        navigator.platform.includes('Mac')
+                            ? 'Cmd'
+                            : 'Ctrl'}
                         +Enter to run query,{' '}
-                        {navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'}+S
-                        to save
+                        {typeof window !== 'undefined' &&
+                        navigator.platform.includes('Mac')
+                            ? 'Cmd'
+                            : 'Ctrl'}
+                        +S to save
                     </span>
                     {isFullscreen && (
                         <span>Press Escape to exit fullscreen</span>
